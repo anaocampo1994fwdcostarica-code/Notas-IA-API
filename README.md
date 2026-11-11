@@ -17,6 +17,8 @@ En lugar de Claude uso **DeepSeek**, a través de su endpoint compatible con la 
 - swagger-jsdoc y swagger-ui-express (documentación)
 - @anthropic-ai/sdk (cliente de IA)
 - dotenv y nodemon
+- express-rate-limit (límite de peticiones)
+- Jest y supertest (pruebas automatizadas)
 
 ## Instalación y ejecución
 
@@ -51,6 +53,7 @@ Abre la documentación en: http://localhost:3000/api-docs
 | `ANTHROPIC_API_KEY` | API key del proveedor de IA (**nunca se sube a Git**) |
 | `CLAUDE_MODEL` | Nombre del modelo que se usa |
 | `PORT` | Puerto del servidor |
+| `RATE_LIMIT_IA` | Máximo de peticiones por minuto a las rutas que usan IA (por defecto 5) |
 
 ## Endpoints
 
@@ -64,6 +67,32 @@ Abre la documentación en: http://localhost:3000/api-docs
 | DELETE | `/api/notas/:id` | Elimina una nota | 204, 404 |
 | POST | `/api/notas/:id/resumen` | Resume una nota en 3 viñetas con IA | 200, 404, 429, 502, 503 |
 | POST | `/api/ia/preguntar` | Envía una pregunta a la IA | 200, 400, 429, 502, 503 |
+
+## Retos extra
+
+### 1. Límite de peticiones a la IA (rate limit)
+
+Cada llamada a la IA gasta saldo, así que las rutas que usan IA tienen un límite de peticiones por minuto, hecho con `express-rate-limit` en `src/middlewares/rateLimitIA.js`.
+
+- **Rutas protegidas:** `POST /api/ia/preguntar` y `POST /api/notas/:id/resumen`. Comparten el mismo contador por IP. Las demás rutas no tienen límite.
+- **Límite:** se configura con la variable `RATE_LIMIT_IA` (por defecto 5 peticiones por minuto).
+- **Orden:** el limitador se ejecuta **antes** de la validación y de la llamada a la IA, así que una petición bloqueada no gasta nada.
+- **Respuesta al superar el límite:** `429` con `{ "error": "DEMASIADAS_PETICIONES" }`.
+- **Cabeceras:** cada respuesta incluye `RateLimit-Limit`, `RateLimit-Remaining` y `RateLimit-Reset` (segundos que faltan para que se reinicie el contador).
+
+### 2. Pruebas automatizadas (Jest + supertest)
+
+```bash
+npm test
+```
+
+Las pruebas están en `tests/` y **no gastan créditos**: `claude.service` se reemplaza por una versión simulada con `jest.mock`, así que la IA real nunca se llama y no se necesita API key. Importan `src/app.js` (no `index.js`), por lo que tampoco abren ningún puerto.
+
+| Archivo | Qué prueba |
+|---|---|
+| `tests/notas.test.js` | CRUD completo: GET, POST, PUT y DELETE con sus códigos 200, 201, 204, 400 y 404 |
+| `tests/ia.test.js` | Pregunta válida (200), validación antes de la IA (400 sin llamarla), resumen (404 sin llamarla y 200 con el `system` correcto) y error 401 del proveedor convertido en 502 `IA_NO_DISPONIBLE` sin filtrar el mensaje original |
+| `tests/rateLimit.test.js` | Con un límite de 2, la tercera petición responde 429 sin llamar a la IA |
 
 ## Experimentos con `system`
 
