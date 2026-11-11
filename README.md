@@ -1,6 +1,7 @@
 # Laboratorio #5: API REST con Express y Swagger integrando la Claude API
 
 **Autora:** Ana Ocampo
+**Rol:** Desarrolladora única (trabajo individual): diseño, código, documentación y pruebas.
 **Repositorio:** https://github.com/anaocampo1994fwdcostarica-code/Notas-IA-API
 
 API REST de notas hecha con Express 5 y documentada con Swagger. Permite crear, listar, consultar y eliminar notas, hacer preguntas a un modelo de IA y resumir notas en 3 viñetas.
@@ -63,26 +64,15 @@ Abre la documentación en: http://localhost:3000/api-docs
 | POST | `/api/notas/:id/resumen` | Resume una nota en 3 viñetas con IA | 200, 404, 429, 502, 503 |
 | POST | `/api/ia/preguntar` | Envía una pregunta a la IA | 200, 400, 429, 502, 503 |
 
-## Capturas
-
-### Pregunta a la IA
-![Pregunta a la IA](docs/pregunta.png)
-
-### Resumen de una nota
-![Resumen de una nota](docs/resumen.png)
-
-### API key falsa (error controlado)
-![API key falsa](docs/key-falsa.png)
-
 ## Experimentos con `system`
 
 Cambié el texto de `system` del endpoint de resumen (`POST /api/notas/1/resumen`) y comparé las respuestas usando la misma nota.
 
 | # | Prompt de `system` | Endpoint | Observación |
 |---|---|---|---|
-| 1 | Resume el texto en 3 viñetas breves, en español. | `/api/notas/1/resumen` | 👉 COMPLETAR (ej.: devolvió 3 viñetas cortas en español) |
-| 2 | Resume el texto en una frase. | `/api/notas/1/resumen` | 👉 COMPLETAR |
-| 3 | Traduce al inglés. | `/api/notas/1/resumen` | 👉 COMPLETAR |
+| 1 | Resume el texto en 3 viñetas breves, en español. | `/api/notas/1/resumen` | Devolvió 3 viñetas cortas en español, una idea por viñeta. |
+| 2 | Resume el texto en una frase. | `/api/notas/1/resumen` | Devolvió una sola oración que resume la nota, sin viñetas. |
+| 3 | Traduce al inglés. | `/api/notas/1/resumen` | Ya no resumió: devolvió el contenido de la nota traducido al inglés. Solo cambiando el `system`, cambió la tarea completa. |
 
 ## Reflexión
 
@@ -105,9 +95,9 @@ _Respuesta:_
 | Llamada | input_tokens | output_tokens |
 |---|---|---|
 | `POST /api/ia/preguntar` — "Explica qué es un JSON en dos líneas" | 52 | 114 |
-| 👉 COMPLETAR — segunda pregunta | ___ | ___ |
+| `POST /api/ia/preguntar` — "¿Qué es REST?" | 47 | 1024 |
 
-Los `input_tokens` son lo que entra al modelo (el `system` más la pregunta) y los `output_tokens` son lo que responde. El parámetro **`max_tokens`** (1024 en mi código) limita el tamaño máximo de la respuesta y, con eso, el costo de salida. Además, la validación con Zod (`max(2000)` en la pregunta) limita el costo de entrada.
+Los `input_tokens` son lo que entra al modelo (el `system` más la pregunta) y los `output_tokens` son lo que responde. El parámetro **`max_tokens`** (1024 en mi código) limita el tamaño máximo de la respuesta y, con eso, el costo de salida. Lo comprobé con la pregunta "¿Qué es REST?": la respuesta llegó exactamente a 1024 tokens y se cortó en el límite, así que no pudo gastar más. Además, la validación con Zod (`max(2000)` en la pregunta) limita el costo de entrada.
 
 **5. ¿Qué pasaría si no se validara el body?**
 
