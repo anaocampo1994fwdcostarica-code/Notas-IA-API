@@ -3,6 +3,7 @@ const { z } = require('zod');
 const notas = require('../services/notas.service');
 const claude = require('../services/claude.service');
 const validar = require('../middlewares/validar');
+const rateLimitIA = require('../middlewares/rateLimitIA');
 
 const router = Router();
 
@@ -203,7 +204,7 @@ router.delete('/:id', (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       429:
- *         description: Límite de uso de la IA alcanzado
+ *         description: Demasiadas peticiones (límite por minuto) o límite del proveedor
  *         content:
  *           application/json:
  *             schema:
@@ -221,7 +222,8 @@ router.delete('/:id', (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/:id/resumen', async (req, res) => {
+// rateLimitIA va primero: si se supera el límite responde 429 sin llamar a la IA
+router.post('/:id/resumen', rateLimitIA, async (req, res) => {
   // Primero buscamos la nota: si no existe, se lanza 404 y la IA NO se llama
   const nota = notas.buscar(Number(req.params.id));
 
