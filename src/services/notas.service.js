@@ -28,10 +28,19 @@ function crear({ titulo, contenido }) {
   return nota;
 }
 
+// Actualiza solo los campos que vengan (titulo y/o contenido)
+// Usa buscar() para obtener el 404 si no existe
+function actualizar(id, datos) {
+  const nota = buscar(id);
+  if (datos.titulo !== undefined) nota.titulo = datos.titulo;
+  if (datos.contenido !== undefined) nota.contenido = datos.contenido;
+  return nota;
+}
+
 // Elimina una nota; usa buscar() para obtener el 404 si no existe
 function eliminar(id) {
   const nota = buscar(id);
   notas.splice(notas.indexOf(nota), 1);
 }
 
-module.exports = { listar, buscar, crear, eliminar };
+module.exports = { listar, buscar, crear, actualizar, eliminar };

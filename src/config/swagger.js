@@ -32,6 +32,15 @@ const options = {
             },
           },
         },
+        // Lo que el cliente envía para actualizar una nota (al menos un campo)
+        NotaUpdate: {
+          type: 'object',
+          minProperties: 1,
+          properties: {
+            titulo: { type: 'string', minLength: 1, maxLength: 100, example: 'Clase de Express (editada)' },
+            contenido: { type: 'string', minLength: 1, maxLength: 5000, example: 'Contenido actualizado de la nota.' },
+          },
+        },
         // Una nota guardada
         Nota: {
           type: 'object',
