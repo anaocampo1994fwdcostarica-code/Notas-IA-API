@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { z } = require('zod');
 const claude = require('../services/claude.service');
 const validar = require('../middlewares/validar');
+const rateLimitIA = require('../middlewares/rateLimitIA');
 
 const router = Router();
 
@@ -36,7 +37,7 @@ const preguntaSchema = z.object({
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       429:
- *         description: Límite de uso de la IA alcanzado
+ *         description: Demasiadas peticiones (límite por minuto) o límite del proveedor
  *         content:
  *           application/json:
  *             schema:
@@ -54,8 +55,9 @@ const preguntaSchema = z.object({
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-// validar va ANTES del handler: si la pregunta es inválida, la IA nunca se llama
-router.post('/preguntar', validar(preguntaSchema), async (req, res) => {
+// Orden: 1) rate limit, 2) validación, 3) llamada a la IA.
+// Si falla el límite o la validación, la IA nunca se llama.
+router.post('/preguntar', rateLimitIA, validar(preguntaSchema), async (req, res) => {
   const { respuesta, uso } = await claude.preguntar(req.body.pregunta);
   res.status(200).json({ respuesta, uso });
 });
