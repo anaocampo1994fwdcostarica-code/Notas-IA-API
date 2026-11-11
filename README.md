@@ -4,7 +4,7 @@
 **Rol:** Desarrolladora única (trabajo individual): diseño, código, documentación y pruebas.
 **Repositorio:** https://github.com/anaocampo1994fwdcostarica-code/Notas-IA-API
 
-API REST de notas hecha con Express 5 y documentada con Swagger. Permite crear, listar, consultar y eliminar notas, hacer preguntas a un modelo de IA y resumir notas en 3 viñetas.
+API REST de notas hecha con Express 5 y documentada con Swagger. Permite crear, listar, consultar, editar y eliminar notas, hacer preguntas a un modelo de IA y resumir notas en 3 viñetas.
 
 ## Proveedor de IA
 
@@ -60,6 +60,7 @@ Abre la documentación en: http://localhost:3000/api-docs
 | GET | `/api/notas` | Lista todas las notas | 200 |
 | GET | `/api/notas/:id` | Obtiene una nota | 200, 404 |
 | POST | `/api/notas` | Crea una nota | 201, 400 |
+| PUT | `/api/notas/:id` | Actualiza una nota (título y/o contenido) | 200, 400, 404 |
 | DELETE | `/api/notas/:id` | Elimina una nota | 204, 404 |
 | POST | `/api/notas/:id/resumen` | Resume una nota en 3 viñetas con IA | 200, 404, 429, 502, 503 |
 | POST | `/api/ia/preguntar` | Envía una pregunta a la IA | 200, 400, 429, 502, 503 |

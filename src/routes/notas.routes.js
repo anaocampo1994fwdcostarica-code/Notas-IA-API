@@ -12,6 +12,17 @@ const notaSchema = z.object({
   contenido: z.string().min(1).max(5000),
 });
 
+// Reglas para actualizar: ambos campos son opcionales,
+// pero debe venir AL MENOS uno (si llega {} responde 400)
+const notaUpdateSchema = z
+  .object({
+    titulo: z.string().min(1).max(100).optional(),
+    contenido: z.string().min(1).max(5000).optional(),
+  })
+  .refine((d) => d.titulo !== undefined || d.contenido !== undefined, {
+    message: 'Debe enviar al menos titulo o contenido',
+  });
+
 /**
  * @openapi
  * /api/notas:
@@ -93,6 +104,50 @@ router.get('/:id', (req, res) => {
 router.post('/', validar(notaSchema), (req, res) => {
   const nota = notas.crear(req.body);
   res.status(201).json(nota); // 201 = recurso creado
+});
+
+/**
+ * @openapi
+ * /api/notas/{id}:
+ *   put:
+ *     tags: [Notas]
+ *     summary: Actualiza una nota
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/NotaUpdate'
+ *     responses:
+ *       200:
+ *         description: Nota actualizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Nota'
+ *       400:
+ *         description: Datos inválidos o body vacío
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Nota no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/:id', validar(notaUpdateSchema), (req, res) => {
+  // Solo se cambian los campos que vengan en el body
+  const nota = notas.actualizar(Number(req.params.id), req.body);
+  res.status(200).json(nota);
 });
 
 /**
